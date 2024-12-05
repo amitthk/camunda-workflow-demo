@@ -1,0 +1,24 @@
+* Camunda 8 workflow demo project
+
+** How to run
+
+Make sure you have openjdk 17 and maven in your path.
+
+#+BEGIN_SRC 
+mvn clean package
+
+spring-boot:run
+#+END_SRC
+
+
+The project contains both client and camunda 8 server.
+
+
+Camunda server:  http://localhost:8080/camunda
+
+Default user: demo
+Default password: demopass
+
+Note: you can change the user and password in the src/main/resources/application.yml file.
+
+WorkflowController contains the Client tasks:    http://localhost:8080/swagger-ui.html
