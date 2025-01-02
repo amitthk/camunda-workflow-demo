@@ -22,7 +22,7 @@ camunda:
     process-engine-name: default
     database:
       type: h2
-    history-level: full # Ensure history level is set to capture data
+    history-level: full
     generic-properties:
       properties:
         historyTimeToLive: P1D

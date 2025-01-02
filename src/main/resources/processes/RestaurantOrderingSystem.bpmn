@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_OrderingProcess" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.29.0">
+  <bpmn:process id="FastFoodOrderingProcess" name="Fast Food Ordering Process" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_Order" name="StartOrder">
+      <bpmn:outgoing>Flow_OrderToInventory</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_CheckInventory" name="Check Inventory" camunda:delegateExpression="${inventoryService}">
+      <bpmn:incoming>Flow_OrderToInventory</bpmn:incoming>
+      <bpmn:incoming>Flow_UpdateOrderContents</bpmn:incoming>
+      <bpmn:outgoing>Flow_InventoryCheck</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_InventoryCheck" name="Inventory Available?">
+      <bpmn:incoming>Flow_InventoryCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_InventoryAvailable</bpmn:outgoing>
+      <bpmn:outgoing>Flow_InventoryUnavailable</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_InventoryAvailable" name="Inventory Available" sourceRef="Gateway_InventoryCheck" targetRef="Task_ProceedToPayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${inventoryAvailable == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_InventoryUnavailable" name="Inventory Unavailable" sourceRef="Gateway_InventoryCheck" targetRef="Task_UpdateOrder">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${inventoryAvailable == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_UpdateOrder" name="Update Order">
+      <bpmn:incoming>Flow_InventoryUnavailable</bpmn:incoming>
+      <bpmn:outgoing>Flow_OrderUpdated</bpmn:outgoing>
+      <bpmn:outgoing>Flow_UpdateOrderContents</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_OrderUpdated" sourceRef="Task_UpdateOrder" targetRef="Task_CheckInventory" />
+    <bpmn:userTask id="Task_ProceedToPayment" name="Proceed to Payment">
+      <bpmn:incoming>Flow_InventoryAvailable</bpmn:incoming>
+      <bpmn:outgoing>Flow_10wulpm</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_ProcessPayment" name="Process Payment" camunda:delegateExpression="${paymentGatewayService}">
+      <bpmn:incoming>Flow_10wulpm</bpmn:incoming>
+      <bpmn:incoming>Flow_UpdatePayment</bpmn:incoming>
+      <bpmn:outgoing>Flow_0xm6z05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_PaymentCheck" name="Payment Successful?">
+      <bpmn:incoming>Flow_0xm6z05</bpmn:incoming>
+      <bpmn:outgoing>Flow_PaymentSuccessful</bpmn:outgoing>
+      <bpmn:outgoing>Flow_PaymentFailed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_PaymentSuccessful" name="Payment Successful" sourceRef="Gateway_PaymentCheck" targetRef="Task_AssignQueue">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${paymentSuccess == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_PaymentFailed" name="Payment Failed" sourceRef="Gateway_PaymentCheck" targetRef="Task_RetryPayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${paymentSuccess == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_RetryPayment" name="Update and Retry Payment">
+      <bpmn:incoming>Flow_PaymentFailed</bpmn:incoming>
+      <bpmn:outgoing>Flow_UpdatePayment</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_AssignQueue" name="Assign Queue Number" camunda:delegateExpression="${queueAssignmentService}">
+      <bpmn:incoming>Flow_PaymentSuccessful</bpmn:incoming>
+      <bpmn:outgoing>Flow_0d00jq2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_NotifyCookingStations" name="Notify Cooking Stations" camunda:delegateExpression="${cookingNotificationService}">
+      <bpmn:incoming>Flow_0d00jq2</bpmn:incoming>
+      <bpmn:outgoing>Flow_0thrnzt</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_AssembleOrder" name="Assemble Order">
+      <bpmn:incoming>Flow_0thrnzt</bpmn:incoming>
+      <bpmn:outgoing>Flow_0i6k4ft</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_NotifyCustomer" name="Notify Customer for Collection" camunda:delegateExpression="${notificationService}">
+      <bpmn:incoming>Flow_0i6k4ft</bpmn:incoming>
+      <bpmn:outgoing>Flow_1evi581</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_Completed" name="Order Completed">
+      <bpmn:incoming>Flow_1evi581</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_OrderToInventory" name="OrderPlaced" sourceRef="StartEvent_Order" targetRef="Task_CheckInventory" />
+    <bpmn:sequenceFlow id="Flow_InventoryCheck" sourceRef="Task_CheckInventory" targetRef="Gateway_InventoryCheck" />
+    <bpmn:sequenceFlow id="Flow_10wulpm" sourceRef="Task_ProceedToPayment" targetRef="Task_ProcessPayment" />
+    <bpmn:sequenceFlow id="Flow_0xm6z05" sourceRef="Task_ProcessPayment" targetRef="Gateway_PaymentCheck" />
+    <bpmn:sequenceFlow id="Flow_0d00jq2" sourceRef="Task_AssignQueue" targetRef="Task_NotifyCookingStations" />
+    <bpmn:sequenceFlow id="Flow_0thrnzt" sourceRef="Task_NotifyCookingStations" targetRef="Task_AssembleOrder" />
+    <bpmn:sequenceFlow id="Flow_0i6k4ft" sourceRef="Task_AssembleOrder" targetRef="Task_NotifyCustomer" />
+    <bpmn:sequenceFlow id="Flow_1evi581" sourceRef="Task_NotifyCustomer" targetRef="EndEvent_Completed" />
+    <bpmn:sequenceFlow id="Flow_UpdatePayment" name="Update Paymnent" sourceRef="Task_RetryPayment" targetRef="Task_ProcessPayment" />
+    <bpmn:sequenceFlow id="Flow_UpdateOrderContents" name="Update Ordered Items" sourceRef="Task_UpdateOrder" targetRef="Task_CheckInventory" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_OrderingProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_OrderingProcess" bpmnElement="FastFoodOrderingProcess">
+      <bpmndi:BPMNShape id="StartEvent_OrderPlaced_di" bpmnElement="StartEvent_Order">
+        <dc:Bounds x="172" y="283" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="166" y="319" width="52" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckInventory_di" bpmnElement="Task_CheckInventory">
+        <dc:Bounds x="300" y="261" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_InventoryCheck_di" bpmnElement="Gateway_InventoryCheck" isMarkerVisible="true">
+        <dc:Bounds x="530" y="276" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="529" y="251" width="51" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateOrder_di" bpmnElement="Task_UpdateOrder">
+        <dc:Bounds x="505" y="380" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ProceedToPayment_di" bpmnElement="Task_ProceedToPayment">
+        <dc:Bounds x="560" y="70" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ProcessPayment_di" bpmnElement="Task_ProcessPayment">
+        <dc:Bounds x="740" y="70" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PaymentCheck_di" bpmnElement="Gateway_PaymentCheck" isMarkerVisible="true">
+        <dc:Bounds x="890" y="240" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="835" y="251" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RetryPayment_di" bpmnElement="Task_RetryPayment">
+        <dc:Bounds x="890" y="380" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AssignQueue_di" bpmnElement="Task_AssignQueue">
+        <dc:Bounds x="1010" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyCookingStations_di" bpmnElement="Task_NotifyCookingStations">
+        <dc:Bounds x="1190" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AssembleOrder_di" bpmnElement="Task_AssembleOrder">
+        <dc:Bounds x="1370" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyCustomer_di" bpmnElement="Task_NotifyCustomer">
+        <dc:Bounds x="1550" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Completed_di" bpmnElement="EndEvent_Completed">
+        <dc:Bounds x="1712" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1688" y="288" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_InventoryAvailable_di" bpmnElement="Flow_InventoryAvailable">
+        <di:waypoint x="580" y="301" />
+        <di:waypoint x="610" y="301" />
+        <di:waypoint x="610" y="150" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="587" y="203" width="46" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_InventoryUnavailable_di" bpmnElement="Flow_InventoryUnavailable">
+        <di:waypoint x="555" y="326" />
+        <di:waypoint x="555" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="561" y="336" width="58" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PaymentSuccessful_di" bpmnElement="Flow_PaymentSuccessful">
+        <di:waypoint x="935" y="270" />
+        <di:waypoint x="1010" y="270" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="943" y="256" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PaymentFailed_di" bpmnElement="Flow_PaymentFailed">
+        <di:waypoint x="915" y="290" />
+        <di:waypoint x="915" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="871" y="332" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_OrderToInventory_di" bpmnElement="Flow_OrderToInventory">
+        <di:waypoint x="208" y="301" />
+        <di:waypoint x="300" y="301" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="224" y="283" width="62" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_InventoryCheck_di" bpmnElement="Flow_InventoryCheck">
+        <di:waypoint x="400" y="301" />
+        <di:waypoint x="530" y="301" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10wulpm_di" bpmnElement="Flow_10wulpm">
+        <di:waypoint x="660" y="110" />
+        <di:waypoint x="740" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xm6z05_di" bpmnElement="Flow_0xm6z05">
+        <di:waypoint x="840" y="110" />
+        <di:waypoint x="915" y="110" />
+        <di:waypoint x="915" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d00jq2_di" bpmnElement="Flow_0d00jq2">
+        <di:waypoint x="1110" y="270" />
+        <di:waypoint x="1190" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0thrnzt_di" bpmnElement="Flow_0thrnzt">
+        <di:waypoint x="1290" y="270" />
+        <di:waypoint x="1370" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0i6k4ft_di" bpmnElement="Flow_0i6k4ft">
+        <di:waypoint x="1470" y="270" />
+        <di:waypoint x="1550" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1evi581_di" bpmnElement="Flow_1evi581">
+        <di:waypoint x="1650" y="270" />
+        <di:waypoint x="1712" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0m0ddyp_di" bpmnElement="Flow_UpdatePayment">
+        <di:waypoint x="890" y="420" />
+        <di:waypoint x="790" y="420" />
+        <di:waypoint x="790" y="150" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="797" y="402" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0p45ewu_di" bpmnElement="Flow_UpdateOrderContents">
+        <di:waypoint x="555" y="460" />
+        <di:waypoint x="555" y="490" />
+        <di:waypoint x="350" y="490" />
+        <di:waypoint x="350" y="341" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="415" y="476" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

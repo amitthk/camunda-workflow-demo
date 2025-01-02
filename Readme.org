@@ -1,4 +1,4 @@
-* Camunda 8 workflow demo project
+* Camunda -  Workflow Engine Demo with Spring Boot
 
 ** How to run
 

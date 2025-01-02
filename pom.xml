@@ -11,8 +11,8 @@
     <!-- lookup parent from repository -->
   </parent>
 
-  <groupId>com.stical.workflows</groupId>
-  <artifactId>camunda8-workflow-demo-project</artifactId>
+  <groupId>com.amitthk.workflows</groupId>
+  <artifactId>camunda-workflow-management</artifactId>
   <version>1.0.0-SNAPSHOT</version>
 
   <properties>
@@ -58,14 +58,15 @@
       <version>2.3.0</version>
     </dependency>
     <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.32</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.camunda</groupId>
-      <artifactId>spring-boot-starter-camunda-sdk</artifactId>
-      <version>8.6.0</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
